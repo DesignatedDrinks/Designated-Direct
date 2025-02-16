@@ -28,7 +28,7 @@
   </head>
   <body>
     <h1>Choose a Variety Pack</h1>
-    <!-- Dropdown for the pack titles -->
+    <!-- Dropdown for Pack Titles -->
     <div class="filter-container">
       <label for="packDropdown">Select Variety Pack: </label>
       <select id="packDropdown">
@@ -36,33 +36,33 @@
       </select>
     </div>
     
-    <!-- Results: Detailed entries from "Variety Packs" tab -->
+    <!-- Detailed results from "Variety Packs" tab -->
     <div id="results">Loading data...</div>
     
     <script>
-      // Your Google Sheet details
+      // Google Sheet details
       const spreadsheetId = '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us';
       const apiKey = 'AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE';
       
-      // URL to fetch pack titles from the "Pack Titles" tab (Column A, rows 2+)
+      // URL for "Pack Titles" tab (titles in Column A, rows 2+)
       const packTitlesRange = "Pack Titles!A2:A";
       const packTitlesURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(packTitlesRange)}?key=${apiKey}`;
       
-      // URL to fetch detailed variety pack data from the "Variety Packs" tab (Columns A–C, rows 2–1000)
+      // URL for "Variety Packs" tab (detailed data in Columns A–C, rows 2–1000)
       const varietyPacksRange = "Variety Packs!A2:C1000";
       const varietyPacksURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(varietyPacksRange)}?key=${apiKey}`;
       
-      // Global variable to hold detailed variety packs data
+      // Global variable to store detailed variety packs data
       let varietyPacksData = [];
       
-      // Function to display data filtered by the selected pack title
+      // Function to display detailed data filtered by pack title
       function displayData(filterTitle) {
         const resultsDiv = document.getElementById('results');
         resultsDiv.innerHTML = '';
         
-        // If filterTitle is not "All", filter the data by matching the pack title (in Column A)
+        // Filter data if a specific title is selected
         let filteredData = varietyPacksData;
-        if (filterTitle && filterTitle !== 'All') {
+        if (filterTitle !== 'All') {
           filteredData = varietyPacksData.filter(row => row[0].trim() === filterTitle);
         }
         
@@ -71,7 +71,7 @@
           return;
         }
         
-        // For each matching entry, create a display block
+        // Create an element for each entry
         filteredData.forEach(row => {
           const [packTitle, beerName, beerImageURL] = row;
           const packDiv = document.createElement('div');
@@ -88,8 +88,12 @@
         fetch(varietyPacksURL).then(response => response.json())
       ])
       .then(([packTitlesResponse, varietyPacksResponse]) => {
-        // Populate the dropdown from "Pack Titles"
+        console.log("Pack Titles Response:", packTitlesResponse);
+        console.log("Variety Packs Response:", varietyPacksResponse);
+        
         const packDropdown = document.getElementById('packDropdown');
+        
+        // Populate dropdown with titles from "Pack Titles" tab
         if (packTitlesResponse.values && packTitlesResponse.values.length > 0) {
           packTitlesResponse.values.forEach(row => {
             const title = row[0];
@@ -98,9 +102,11 @@
             option.textContent = title;
             packDropdown.appendChild(option);
           });
+        } else {
+          console.warn("No data found in 'Pack Titles' tab.");
         }
         
-        // Store the detailed variety packs data from "Variety Packs"
+        // Store detailed variety packs data from "Variety Packs" tab
         if (varietyPacksResponse.values && varietyPacksResponse.values.length > 0) {
           varietyPacksData = varietyPacksResponse.values;
         } else {
@@ -111,7 +117,7 @@
         // Initially display all entries
         displayData('All');
         
-        // Update displayed data when the dropdown selection changes
+        // Update displayed data when dropdown selection changes
         packDropdown.addEventListener('change', function() {
           displayData(this.value);
         });
