@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <title>Designated Direct - Variety Pack Titles</title>
+    <meta charset="UTF-8">
+    <title>Designated Direct - Variety Packs</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -13,69 +13,113 @@
       .filter-container {
         margin-bottom: 20px;
       }
+      .pack-item {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+      }
+      .pack-item img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
     </style>
   </head>
   <body>
     <h1>Choose a Variety Pack</h1>
-    
-    <!-- Dropdown for the variety packs -->
+    <!-- Dropdown for the pack titles -->
     <div class="filter-container">
-      <label for="varietyFilter">Select Variety Pack: </label>
-      <select id="varietyFilter">
-        <!-- Options will be dynamically populated -->
+      <label for="packDropdown">Select Variety Pack: </label>
+      <select id="packDropdown">
+        <option value="All">All</option>
       </select>
     </div>
     
-    <div id="selectedPack">Loading data...</div>
-
+    <!-- Results: Detailed entries from "Variety Packs" tab -->
+    <div id="results">Loading data...</div>
+    
     <script>
-      // Spreadsheet details
+      // Your Google Sheet details
       const spreadsheetId = '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us';
       const apiKey = 'AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE';
       
-      // We'll fetch column A, rows 2+ from the "Variety Packs" tab
-      const range = "Variety Packs!A2:A";
-      const encodedRange = encodeURIComponent(range);
-
-      // Construct the Sheets API URL
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
-
-      // Fetch the variety pack titles from the Google Sheet
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          console.log(data); // For debugging: see the full API response in the console
-
-          const selectedPackDiv = document.getElementById('selectedPack');
-          const varietyFilter = document.getElementById('varietyFilter');
-
-          // Check if data is valid
-          if (!data.values || data.values.length === 0) {
-            selectedPackDiv.textContent = 'No variety packs found!';
-            return;
-          }
-
-          // Clear the "Loading data..." text
-          selectedPackDiv.textContent = 'Please select a variety pack above.';
-
-          // data.values is an array of arrays (e.g., [["Designated Drinks ... 12 Pack"], ["Designated Drinks ... 24 Pack"], ...])
-          data.values.forEach(row => {
-            const packTitle = row[0]; // The only column in this row
-            const option = document.createElement('option');
-            option.value = packTitle;
-            option.textContent = packTitle;
-            varietyFilter.appendChild(option);
-          });
-
-          // When the user changes the dropdown, display their selection
-          varietyFilter.addEventListener('change', function() {
-            selectedPackDiv.textContent = `You selected: ${this.value}`;
-          });
-        })
-        .catch(error => {
-          console.error('Error fetching data:', error);
-          document.getElementById('selectedPack').textContent = 'Failed to load data.';
+      // URL to fetch pack titles from the "Pack Titles" tab (Column A, rows 2+)
+      const packTitlesRange = "Pack Titles!A2:A";
+      const packTitlesURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(packTitlesRange)}?key=${apiKey}`;
+      
+      // URL to fetch detailed variety pack data from the "Variety Packs" tab (Columns A–C, rows 2–1000)
+      const varietyPacksRange = "Variety Packs!A2:C1000";
+      const varietyPacksURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(varietyPacksRange)}?key=${apiKey}`;
+      
+      // Global variable to hold detailed variety packs data
+      let varietyPacksData = [];
+      
+      // Function to display data filtered by the selected pack title
+      function displayData(filterTitle) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+        
+        // If filterTitle is not "All", filter the data by matching the pack title (in Column A)
+        let filteredData = varietyPacksData;
+        if (filterTitle && filterTitle !== 'All') {
+          filteredData = varietyPacksData.filter(row => row[0].trim() === filterTitle);
+        }
+        
+        if (filteredData.length === 0) {
+          resultsDiv.textContent = 'No entries found for this variety pack.';
+          return;
+        }
+        
+        // For each matching entry, create a display block
+        filteredData.forEach(row => {
+          const [packTitle, beerName, beerImageURL] = row;
+          const packDiv = document.createElement('div');
+          packDiv.classList.add('pack-item');
+          packDiv.innerHTML = `<h3>${packTitle} - ${beerName}</h3>
+                               <img src="${beerImageURL}" alt="${beerName}">`;
+          resultsDiv.appendChild(packDiv);
         });
+      }
+      
+      // Fetch both datasets concurrently
+      Promise.all([
+        fetch(packTitlesURL).then(response => response.json()),
+        fetch(varietyPacksURL).then(response => response.json())
+      ])
+      .then(([packTitlesResponse, varietyPacksResponse]) => {
+        // Populate the dropdown from "Pack Titles"
+        const packDropdown = document.getElementById('packDropdown');
+        if (packTitlesResponse.values && packTitlesResponse.values.length > 0) {
+          packTitlesResponse.values.forEach(row => {
+            const title = row[0];
+            const option = document.createElement('option');
+            option.value = title;
+            option.textContent = title;
+            packDropdown.appendChild(option);
+          });
+        }
+        
+        // Store the detailed variety packs data from "Variety Packs"
+        if (varietyPacksResponse.values && varietyPacksResponse.values.length > 0) {
+          varietyPacksData = varietyPacksResponse.values;
+        } else {
+          document.getElementById('results').textContent = 'No variety pack data found.';
+          return;
+        }
+        
+        // Initially display all entries
+        displayData('All');
+        
+        // Update displayed data when the dropdown selection changes
+        packDropdown.addEventListener('change', function() {
+          displayData(this.value);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        document.getElementById('results').textContent = 'Failed to load data.';
+      });
     </script>
   </body>
 </html>
