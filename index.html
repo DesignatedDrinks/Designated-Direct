@@ -10,73 +10,67 @@
         margin: 20px auto;
         padding: 0 20px;
       }
-      .pack {
-        border: 1px solid #ccc;
-        padding: 15px;
+      .filter-container {
         margin-bottom: 20px;
-        border-radius: 5px;
-      }
-      .pack h3 {
-        margin: 0 0 10px;
-      }
-      .pack img {
-        max-width: 100%;
-        height: auto;
-        display: block;
       }
     </style>
   </head>
   <body>
-    <h1>Variety Packs</h1>
-    <div id="packs">Loading data...</div>
+    <h1>Choose a Variety Pack</h1>
+
+    <div class="filter-container">
+      <label for="varietyFilter">Select Variety Pack: </label>
+      <select id="varietyFilter">
+        <!-- Options will be populated by JavaScript -->
+      </select>
+    </div>
+
+    <div id="selectedPack">Loading data...</div>
 
     <script>
-      // Spreadsheet details
-      const spreadsheetId = '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us';
-      const apiKey = 'AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE';
+      // Your Google Sheets details
+      const spreadsheetId = 'YOUR_SPREADSHEET_ID'; // e.g., '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us'
+      const apiKey = 'YOUR_API_KEY';
       
-      // Using the tab "Variety Packs" with data in columns A to C, rows 2 to 1000.
-      const range = "Variety Packs!A2:C1000";
-      // Use encodeURIComponent to properly encode spaces and special characters in the range.
+      // "PackTitles" is the tab name; A2:A covers column A from row 2 to row 1000
+      const range = "PackTitles!A2:A";
       const encodedRange = encodeURIComponent(range);
-      
-      // Construct the API URL
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
 
-      // Fetch data from the Google Sheets API
+      // Fetch the list of variety packs from the sheet
       fetch(url)
         .then(response => response.json())
         .then(data => {
-          console.log(data); // For debugging: check the full API response in the console
-          const packsDiv = document.getElementById('packs');
-          packsDiv.innerHTML = ''; // Clear the "Loading data..." message
+          console.log(data); // Debug the entire response
+          const selectedPackDiv = document.getElementById('selectedPack');
+          const varietyFilter = document.getElementById('varietyFilter');
 
-          // Check if the API returned data
+          // Check if data exists
           if (!data.values || data.values.length === 0) {
-            packsDiv.textContent = 'No data found!';
+            selectedPackDiv.textContent = 'No variety packs found!';
             return;
           }
 
-          // Loop through each row of data
+          // Clear the "Loading data..." text
+          selectedPackDiv.textContent = 'Please select a variety pack above.';
+
+          // data.values is an array of arrays. Each sub-array has one element (the title)
           data.values.forEach(row => {
-            // Each row should contain [Variety Pack Name, Beer Name, Beer Image URL]
-            const [varietyPackName, beerName, beerImageURL] = row;
+            const packTitle = row[0]; // The only column in this row
+            const option = document.createElement('option');
+            option.value = packTitle;
+            option.textContent = packTitle;
+            varietyFilter.appendChild(option);
+          });
 
-            // Create a container for each entry
-            const packElement = document.createElement('div');
-            packElement.classList.add('pack');
-
-            packElement.innerHTML = `
-              <h3>${varietyPackName} - ${beerName}</h3>
-              <img src="${beerImageURL}" alt="${beerName}">
-            `;
-            
-            packsDiv.appendChild(packElement);
+          // Event listener for dropdown changes
+          varietyFilter.addEventListener('change', function() {
+            selectedPackDiv.textContent = `You selected: ${this.value}`;
           });
         })
         .catch(error => {
           console.error('Error fetching data:', error);
-          document.getElementById('packs').textContent = 'Failed to load data.';
+          document.getElementById('selectedPack').textContent = 'Failed to load data.';
         });
     </script>
   </body>
