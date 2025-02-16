@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <title>Designated Direct - Variety Packs</title>
+    <meta charset="UTF-8" />
+    <title>Designated Direct - Variety Pack Titles</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -17,35 +17,39 @@
   </head>
   <body>
     <h1>Choose a Variety Pack</h1>
-
+    
+    <!-- Dropdown for the variety packs -->
     <div class="filter-container">
       <label for="varietyFilter">Select Variety Pack: </label>
       <select id="varietyFilter">
-        <!-- Options will be populated by JavaScript -->
+        <!-- Options will be dynamically populated -->
       </select>
     </div>
-
+    
     <div id="selectedPack">Loading data...</div>
 
     <script>
-      // Your Google Sheets details
-      const spreadsheetId = 'YOUR_SPREADSHEET_ID'; // e.g., '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us'
-      const apiKey = 'YOUR_API_KEY';
+      // Spreadsheet details
+      const spreadsheetId = '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us';
+      const apiKey = 'AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE';
       
-      // "PackTitles" is the tab name; A2:A covers column A from row 2 to row 1000
-      const range = "PackTitles!A2:A";
+      // We'll fetch column A, rows 2+ from the "Variety Packs" tab
+      const range = "Variety Packs!A2:A";
       const encodedRange = encodeURIComponent(range);
+
+      // Construct the Sheets API URL
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
 
-      // Fetch the list of variety packs from the sheet
+      // Fetch the variety pack titles from the Google Sheet
       fetch(url)
         .then(response => response.json())
         .then(data => {
-          console.log(data); // Debug the entire response
+          console.log(data); // For debugging: see the full API response in the console
+
           const selectedPackDiv = document.getElementById('selectedPack');
           const varietyFilter = document.getElementById('varietyFilter');
 
-          // Check if data exists
+          // Check if data is valid
           if (!data.values || data.values.length === 0) {
             selectedPackDiv.textContent = 'No variety packs found!';
             return;
@@ -54,7 +58,7 @@
           // Clear the "Loading data..." text
           selectedPackDiv.textContent = 'Please select a variety pack above.';
 
-          // data.values is an array of arrays. Each sub-array has one element (the title)
+          // data.values is an array of arrays (e.g., [["Designated Drinks ... 12 Pack"], ["Designated Drinks ... 24 Pack"], ...])
           data.values.forEach(row => {
             const packTitle = row[0]; // The only column in this row
             const option = document.createElement('option');
@@ -63,7 +67,7 @@
             varietyFilter.appendChild(option);
           });
 
-          // Event listener for dropdown changes
+          // When the user changes the dropdown, display their selection
           varietyFilter.addEventListener('change', function() {
             selectedPackDiv.textContent = `You selected: ${this.value}`;
           });
