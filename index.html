@@ -34,7 +34,8 @@
       // Provided spreadsheet ID and API key
       const spreadsheetId = '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us';
       const apiKey = 'AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE';
-      const range = 'Sheet1!A2:C';  // Data starting from row 2
+      // Update the range to use the correct tab name "Variety Packs"
+      const range = 'Variety Packs!A2:C';
 
       // Construct the Google Sheets API URL
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${apiKey}`;
@@ -46,6 +47,9 @@
           const packsDiv = document.getElementById('packs');
           packsDiv.innerHTML = ''; // Clear the loading message
 
+          // Debug: log entire API response to the console
+          console.log(data);
+
           // Check if data exists
           if (!data.values || data.values.length === 0) {
             packsDiv.textContent = 'No data found!';
@@ -54,9 +58,9 @@
 
           // Loop through each row of data
           data.values.forEach(row => {
-            const varietyPackName = row[0]; // e.g., "Party Pack"
-            const beerName = row[1];        // e.g., "IOTA - Pale Ale"
-            const beerImageURL = row[2];      // e.g., "https://cdn.shopify.com/..."
+            const varietyPackName = row[0];
+            const beerName = row[1];
+            const beerImageURL = row[2];
 
             // Create a container for each entry
             const packElement = document.createElement('div');
