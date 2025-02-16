@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Designated Direct - Variety Packs</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 0 20px;
+      }
+      .pack {
+        border: 1px solid #ccc;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+      }
+      .pack h3 {
+        margin: 0 0 10px;
+      }
+      .pack img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Variety Packs</h1>
+    <div id="packs">Loading data...</div>
+
+    <script>
+      // Provided spreadsheet ID and API key
+      const spreadsheetId = '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us';
+      const apiKey = 'AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE';
+      const range = 'Sheet1!A2:C';  // Data starting from row 2
+
+      // Construct the Google Sheets API URL
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${apiKey}`;
+
+      // Fetch data from the Google Sheets API
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const packsDiv = document.getElementById('packs');
+          packsDiv.innerHTML = ''; // Clear the loading message
+
+          // Check if data exists
+          if (!data.values || data.values.length === 0) {
+            packsDiv.textContent = 'No data found!';
+            return;
+          }
+
+          // Loop through each row of data
+          data.values.forEach(row => {
+            const varietyPackName = row[0]; // e.g., "Party Pack"
+            const beerName = row[1];        // e.g., "IOTA - Pale Ale"
+            const beerImageURL = row[2];      // e.g., "https://cdn.shopify.com/..."
+
+            // Create a container for each entry
+            const packElement = document.createElement('div');
+            packElement.classList.add('pack');
+
+            packElement.innerHTML = `
+              <h3>${varietyPackName} - ${beerName}</h3>
+              <img src="${beerImageURL}" alt="${beerName}">
+            `;
+
+            packsDiv.appendChild(packElement);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+          document.getElementById('packs').textContent = 'Failed to load data.';
+        });
+    </script>
+  </body>
+</html>
