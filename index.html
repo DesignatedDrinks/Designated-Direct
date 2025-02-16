@@ -31,24 +31,27 @@
     <div id="packs">Loading data...</div>
 
     <script>
-      // Provided spreadsheet ID and API key
+      // Spreadsheet details
       const spreadsheetId = '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us';
       const apiKey = 'AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE';
-      // Updated range with your tab name "Variety Packs"
+      
+      // Using the tab "Variety Packs" with data in columns A to C, rows 2 to 1000.
       const range = "Variety Packs!A2:C1000";
-
+      // Use encodeURIComponent to properly encode spaces and special characters in the range.
+      const encodedRange = encodeURIComponent(range);
+      
       // Construct the API URL
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
 
       // Fetch data from the Google Sheets API
       fetch(url)
         .then(response => response.json())
         .then(data => {
-          console.log(data); // Debug: see the full API response in the console
+          console.log(data); // For debugging: check the full API response in the console
           const packsDiv = document.getElementById('packs');
-          packsDiv.innerHTML = ''; // Clear the loading message
+          packsDiv.innerHTML = ''; // Clear the "Loading data..." message
 
-          // Check if data exists
+          // Check if the API returned data
           if (!data.values || data.values.length === 0) {
             packsDiv.textContent = 'No data found!';
             return;
@@ -56,7 +59,7 @@
 
           // Loop through each row of data
           data.values.forEach(row => {
-            // Destructure each row; row[0]=Variety Pack, row[1]=Beer Name, row[2]=Beer Image URL
+            // Each row should contain [Variety Pack Name, Beer Name, Beer Image URL]
             const [varietyPackName, beerName, beerImageURL] = row;
 
             // Create a container for each entry
@@ -67,7 +70,7 @@
               <h3>${varietyPackName} - ${beerName}</h3>
               <img src="${beerImageURL}" alt="${beerName}">
             `;
-
+            
             packsDiv.appendChild(packElement);
           });
         })
