@@ -1,131 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <!-- Mobile Optimization -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Designated Direct - Variety Packs</title>
     <style>
+      /* Reset and basic styles */
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
       body {
-        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans",
+          "Helvetica Neue", sans-serif;
+        background-color: #f5f5f7;
+        color: #1c1c1e;
+        line-height: 1.5;
+      }
+      .container {
         max-width: 800px;
-        margin: 20px auto;
-        padding: 0 20px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        font-size: 2rem;
+        text-align: center;
+        margin-bottom: 20px;
+        font-weight: 600;
+        color: #000;
       }
       .filter-container {
+        text-align: center;
         margin-bottom: 20px;
       }
-      .pack-item {
-        border: 1px solid #ccc;
+      label {
+        font-size: 1rem;
+        margin-right: 10px;
+      }
+      select {
         padding: 10px;
-        margin-bottom: 10px;
-        border-radius: 5px;
+        font-size: 1rem;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+        background: #fff;
+        outline: none;
+        cursor: pointer;
+      }
+      #results {
+        margin-top: 20px;
+      }
+      .pack-item {
+        background: #fff;
+        border-radius: 16px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease-in-out;
+      }
+      .pack-item:hover {
+        transform: translateY(-2px);
+      }
+      .pack-item h3 {
+        margin: 0 0 10px;
+        font-size: 1.1rem;
+        font-weight: 500;
       }
       .pack-item img {
-        max-width: 100%;
-        height: auto;
+        width: 100%;
+        border-radius: 12px;
         display: block;
+      }
+      /* Mobile tweaks */
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 1.5rem;
+        }
+        select {
+          width: 100%;
+          max-width: 300px;
+        }
+        .pack-item h3 {
+          font-size: 1rem;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Choose a Variety Pack</h1>
-    <!-- Dropdown for Pack Titles -->
-    <div class="filter-container">
-      <label for="packDropdown">Select Variety Pack: </label>
-      <select id="packDropdown">
-        <option value="All">All</option>
-      </select>
+    <div class="container">
+      <h1>Choose a Variety Pack</h1>
+      <!-- Dropdown for Pack Titles -->
+      <div class="filter-container">
+        <label for="packDropdown">Select Variety Pack: </label>
+        <select id="packDropdown">
+          <option value="All">All</option>
+        </select>
+      </div>
+      
+      <!-- Detailed Results from "Variety Packs" tab -->
+      <div id="results">Loading data...</div>
     </div>
-    
-    <!-- Detailed results from "Variety Packs" tab -->
-    <div id="results">Loading data...</div>
-    
+
     <script>
       // Google Sheet details
-      const spreadsheetId = '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us';
-      const apiKey = 'AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE';
-      
+      const spreadsheetId =
+        "1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us";
+      const apiKey = "AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE";
+
       // URL for "Pack Titles" tab (titles in Column A, rows 2+)
       const packTitlesRange = "Pack Titles!A2:A";
-      const packTitlesURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(packTitlesRange)}?key=${apiKey}`;
-      
+      const packTitlesURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+        packTitlesRange
+      )}?key=${apiKey}`;
+
       // URL for "Variety Packs" tab (detailed data in Columns A–C, rows 2–1000)
       const varietyPacksRange = "Variety Packs!A2:C1000";
-      const varietyPacksURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(varietyPacksRange)}?key=${apiKey}`;
-      
+      const varietyPacksURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+        varietyPacksRange
+      )}?key=${apiKey}`;
+
       // Global variable to store detailed variety packs data
       let varietyPacksData = [];
-      
+
       // Function to display detailed data filtered by pack title
       function displayData(filterTitle) {
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = '';
-        
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+
         // Filter data if a specific title is selected
         let filteredData = varietyPacksData;
-        if (filterTitle !== 'All') {
-          filteredData = varietyPacksData.filter(row => row[0].trim() === filterTitle);
+        if (filterTitle !== "All") {
+          filteredData = varietyPacksData.filter(
+            (row) => row[0].trim() === filterTitle
+          );
         }
-        
+
         if (filteredData.length === 0) {
-          resultsDiv.textContent = 'No entries found for this variety pack.';
+          resultsDiv.textContent = "No entries found for this variety pack.";
           return;
         }
-        
+
         // Create an element for each entry
-        filteredData.forEach(row => {
+        filteredData.forEach((row) => {
           const [packTitle, beerName, beerImageURL] = row;
-          const packDiv = document.createElement('div');
-          packDiv.classList.add('pack-item');
+          const packDiv = document.createElement("div");
+          packDiv.classList.add("pack-item");
           packDiv.innerHTML = `<h3>${packTitle} - ${beerName}</h3>
-                               <img src="${beerImageURL}" alt="${beerName}">`;
+                                <img src="${beerImageURL}" alt="${beerName}" />`;
           resultsDiv.appendChild(packDiv);
         });
       }
-      
+
       // Fetch both datasets concurrently
       Promise.all([
-        fetch(packTitlesURL).then(response => response.json()),
-        fetch(varietyPacksURL).then(response => response.json())
+        fetch(packTitlesURL).then((response) => response.json()),
+        fetch(varietyPacksURL).then((response) => response.json()),
       ])
-      .then(([packTitlesResponse, varietyPacksResponse]) => {
-        console.log("Pack Titles Response:", packTitlesResponse);
-        console.log("Variety Packs Response:", varietyPacksResponse);
-        
-        const packDropdown = document.getElementById('packDropdown');
-        
-        // Populate dropdown with titles from "Pack Titles" tab
-        if (packTitlesResponse.values && packTitlesResponse.values.length > 0) {
-          packTitlesResponse.values.forEach(row => {
-            const title = row[0];
-            const option = document.createElement('option');
-            option.value = title;
-            option.textContent = title;
-            packDropdown.appendChild(option);
+        .then(([packTitlesResponse, varietyPacksResponse]) => {
+          console.log("Pack Titles Response:", packTitlesResponse);
+          console.log("Variety Packs Response:", varietyPacksResponse);
+
+          const packDropdown = document.getElementById("packDropdown");
+
+          // Populate dropdown with titles from "Pack Titles" tab
+          if (packTitlesResponse.values && packTitlesResponse.values.length > 0) {
+            packTitlesResponse.values.forEach((row) => {
+              const title = row[0];
+              const option = document.createElement("option");
+              option.value = title;
+              option.textContent = title;
+              packDropdown.appendChild(option);
+            });
+          } else {
+            console.warn("No data found in 'Pack Titles' tab.");
+          }
+
+          // Store detailed variety packs data from "Variety Packs" tab
+          if (varietyPacksResponse.values && varietyPacksResponse.values.length > 0) {
+            varietyPacksData = varietyPacksResponse.values;
+          } else {
+            document.getElementById("results").textContent =
+              "No variety pack data found.";
+            return;
+          }
+
+          // Initially display all entries
+          displayData("All");
+
+          // Update displayed data when dropdown selection changes
+          packDropdown.addEventListener("change", function () {
+            displayData(this.value);
           });
-        } else {
-          console.warn("No data found in 'Pack Titles' tab.");
-        }
-        
-        // Store detailed variety packs data from "Variety Packs" tab
-        if (varietyPacksResponse.values && varietyPacksResponse.values.length > 0) {
-          varietyPacksData = varietyPacksResponse.values;
-        } else {
-          document.getElementById('results').textContent = 'No variety pack data found.';
-          return;
-        }
-        
-        // Initially display all entries
-        displayData('All');
-        
-        // Update displayed data when dropdown selection changes
-        packDropdown.addEventListener('change', function() {
-          displayData(this.value);
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+          document.getElementById("results").textContent =
+            "Failed to load data.";
         });
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-        document.getElementById('results').textContent = 'Failed to load data.';
-      });
     </script>
   </body>
 </html>
