@@ -34,21 +34,19 @@
       // Provided spreadsheet ID and API key
       const spreadsheetId = '1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us';
       const apiKey = 'AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE';
-      // Update the range to use the correct tab name "Variety Packs"
-      const range = 'Variety Packs!A2:C';
+      // Updated range with your tab name "Variety Packs"
+      const range = "Variety Packs!A2:C1000";
 
-      // Construct the Google Sheets API URL
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${apiKey}`;
+      // Construct the API URL
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
 
       // Fetch data from the Google Sheets API
       fetch(url)
         .then(response => response.json())
         .then(data => {
+          console.log(data); // Debug: see the full API response in the console
           const packsDiv = document.getElementById('packs');
           packsDiv.innerHTML = ''; // Clear the loading message
-
-          // Debug: log entire API response to the console
-          console.log(data);
 
           // Check if data exists
           if (!data.values || data.values.length === 0) {
@@ -58,9 +56,8 @@
 
           // Loop through each row of data
           data.values.forEach(row => {
-            const varietyPackName = row[0];
-            const beerName = row[1];
-            const beerImageURL = row[2];
+            // Destructure each row; row[0]=Variety Pack, row[1]=Beer Name, row[2]=Beer Image URL
+            const [varietyPackName, beerName, beerImageURL] = row;
 
             // Create a container for each entry
             const packElement = document.createElement('div');
