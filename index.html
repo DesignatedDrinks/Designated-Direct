@@ -105,24 +105,23 @@
 
     <script>
       // Google Sheet details
-      const spreadsheetId =
-        "1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us";
-      const apiKey = "AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE";
+      const spreadsheetId = "1TtRNmjsgC64jbkptnCdklBf_HqifwE9SQO2JlGrp4Us";
+      const apiKey        = "AIzaSyDx9DhE2lC8WwDp0VLAihrPoiYwMLyPSZE";
 
       // URL for "Pack Titles" tab (titles in Column A, rows 2+)
-      const packTitlesRange = "Pack Titles!A2:A";
-      const packTitlesURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
-        packTitlesRange
-      )}?key=${apiKey}`;
+      const packTitlesRange   = "Pack Titles!A2:A";
+      const packTitlesURL     = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(packTitlesRange)}?key=${apiKey}`;
 
       // URL for "Variety Packs" tab (detailed data in Columns A–C, rows 2–1000)
       const varietyPacksRange = "Variety Packs!A2:C1000";
-      const varietyPacksURL = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
-        varietyPacksRange
-      )}?key=${apiKey}`;
+      const varietyPacksURL   = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(varietyPacksRange)}?key=${apiKey}`;
 
       // Global variable to store detailed variety packs data
       let varietyPacksData = [];
+
+      // ➊ Read initial ?pack= parameter (or default to "All")
+      const params      = new URLSearchParams(window.location.search);
+      const initialPack = params.get("pack") || "All";
 
       // Function to display detailed data filtered by pack title
       function displayData(filterTitle) {
@@ -148,7 +147,7 @@
           const packDiv = document.createElement("div");
           packDiv.classList.add("pack-item");
           packDiv.innerHTML = `<h3>${packTitle} - ${beerName}</h3>
-                                <img src="${beerImageURL}" alt="${beerName}" />`;
+                               <img src="${beerImageURL}" alt="${beerName}" />`;
           resultsDiv.appendChild(packDiv);
         });
       }
@@ -159,18 +158,17 @@
         fetch(varietyPacksURL).then((response) => response.json()),
       ])
         .then(([packTitlesResponse, varietyPacksResponse]) => {
-          console.log("Pack Titles Response:", packTitlesResponse);
-          console.log("Variety Packs Response:", varietyPacksResponse);
-
           const packDropdown = document.getElementById("packDropdown");
 
           // Populate dropdown with titles from "Pack Titles" tab
           if (packTitlesResponse.values && packTitlesResponse.values.length > 0) {
             packTitlesResponse.values.forEach((row) => {
-              const title = row[0];
+              const title  = row[0];
               const option = document.createElement("option");
-              option.value = title;
+              option.value       = title;
               option.textContent = title;
+              // ➋ Pre-select if it matches initialPack
+              if (title === initialPack) option.selected = true;
               packDropdown.appendChild(option);
             });
           } else {
@@ -186,8 +184,8 @@
             return;
           }
 
-          // Initially display all entries
-          displayData("All");
+          // ➌ Initially display using initialPack instead of always "All"
+          displayData(initialPack);
 
           // Update displayed data when dropdown selection changes
           packDropdown.addEventListener("change", function () {
